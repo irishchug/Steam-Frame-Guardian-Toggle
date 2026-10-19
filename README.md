@@ -26,7 +26,8 @@ setting: `0` hides them. Nothing under `/opt/steamvr` is modified.
 The bar icon is served by a small background program that starts and stops with
 SteamVR. It sleeps between checks and uses about 0.2% CPU and 15 MB of memory.
 
-Tested on a Steam Frame running SteamOS. SteamVR updates may change behavior.
+Tested on a Steam Frame running SteamOS, both standalone and while streaming from a PC.
+SteamVR updates may change behavior.
 
 ## Install
 
