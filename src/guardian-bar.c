@@ -164,6 +164,18 @@ int main(int argc, char **argv)
     }
     init_state_path();
 
+    /*
+     * An overlay app launches SteamVR if it isn't running, which would put the
+     * whole runtime inside this service. Connect as a background app first, which
+     * never launches it; if SteamVR is not up yet, exit and let systemd retry.
+     */
+    VR_InitInternal(&init_err, EVRApplicationType_VRApplication_Background);
+    if (init_err != EVRInitError_VRInitError_None) {
+        fprintf(stderr, "SteamVR not running yet (%d)\n", init_err);
+        return 1;
+    }
+    VR_ShutdownInternal();
+
     VR_InitInternal(&init_err, EVRApplicationType_VRApplication_Overlay);
     if (init_err != EVRInitError_VRInitError_None) {
         fprintf(stderr, "VR init failed: %d\n", init_err);
