@@ -1,0 +1,14 @@
+[Unit]
+Description=Guardian walls toggle on the SteamVR dashboard bar
+After=steamvr.service
+PartOf=steamvr.service
+
+[Service]
+Type=simple
+ExecStart=@INSTALL_DIR@/guardian-bar
+Restart=on-failure
+RestartSec=5
+Nice=10
+
+[Install]
+WantedBy=steamvr.service
