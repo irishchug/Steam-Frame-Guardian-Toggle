@@ -56,7 +56,7 @@ To update, run `git pull` in the same folder, then `./install.sh` again.
 
 You can also install from a PC with this repository checked out, using a shell with
 `ssh` and `scp` (Linux, macOS, or Git Bash on Windows):
-`./install.sh steamos@<headset-name>`.
+`./install.sh steamos@frame`.
 
 ## Uninstall
 
