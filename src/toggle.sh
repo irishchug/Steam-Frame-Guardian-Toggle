@@ -10,6 +10,10 @@ SAVED=$STATE_DIR/fade-distance
 DEFAULT=0.7
 
 cur=$("$VRCMD" --settings-float "$KEY" | sed -n 's/^.*=//p' | head -1)
+if [ -z "$cur" ]; then
+    echo "Cannot read $KEY. Is SteamVR running?" >&2
+    exit 1
+fi
 
 if awk "BEGIN{exit !($cur > 0)}"; then
     # Walls are visible: remember the current distance, then hide them.

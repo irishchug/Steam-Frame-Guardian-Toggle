@@ -55,7 +55,7 @@ While SSH'd into the headset:
 ~/.local/share/guardian-toggle/uninstall.sh
 ```
 
-This stops and removes the background service, the bar icon, the app list entries and
+This stops and removes the background service, the bar icon, the app list entry and
 saved state, and turns the walls back on if they are hidden.
 
 To keep it installed but stop the bar icon from coming back each time SteamVR starts
