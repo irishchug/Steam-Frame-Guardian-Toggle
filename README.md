@@ -41,7 +41,7 @@ SteamVR updates may change behavior.
 
 1. Enable Developer Mode and set a password on the headset by following Valve's
    [Steam Frame setup guide](https://partner.steamgames.com/doc/steamframe/setup#Developer_Mode).
-2. SSH into the headset (`ssh steamos@<headset-name>`) and run:
+2. SSH into the headset (`ssh steamos@frame`) and run:
 
    ```bash
    git clone https://github.com/irishchug/Steam-Frame-Guardian-Toggle.git
