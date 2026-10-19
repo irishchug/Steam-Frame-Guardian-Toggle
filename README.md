@@ -20,6 +20,14 @@ dashboard's bottom bar.
   command line.
 - Restores your own wall fade distance when showing the walls (default `0.7`).
 
+<p>
+  <img src="assets/notice-hidden.png" alt="Notice: guardian walls hidden" width="320">
+  &nbsp;
+  <img src="assets/notice-shown.png" alt="Notice: guardian walls shown" width="320">
+</p>
+
+The notice shown after each tap. The bar icon is the drawing on the "hidden" notice, in white.
+
 The walls are controlled by the `collisionBounds.CollisionBoundsFadeDistance` SteamVR
 setting: `0` hides them. Nothing under `/opt/steamvr` is modified.
 
@@ -41,10 +49,13 @@ SteamVR updates may change behavior.
    ./install.sh
    ```
 
-   The installer builds the bar program on the headset, so it needs a C compiler
-   (`cc`). Re-run it the same way to update.
+   The installer builds the bar program on the headset with its C compiler (`cc`, part
+   of SteamOS).
 
-You can also install from a PC with this repository checked out:
+To update, run `git pull` in the same folder, then `./install.sh` again.
+
+You can also install from a PC with this repository checked out, using a shell with
+`ssh` and `scp` (Linux, macOS, or Git Bash on Windows):
 `./install.sh steamos@<headset-name>`.
 
 ## Uninstall
