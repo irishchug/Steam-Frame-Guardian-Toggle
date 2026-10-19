@@ -1,8 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Guardian Walls Toggle
-Comment=Show or hide the guardian walls
-Exec=@INSTALL_DIR@/toggle.sh
-Terminal=false
-Categories=Utility;
-StartupNotify=false

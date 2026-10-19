@@ -31,6 +31,7 @@ static struct VR_IVRSettings_FnTable *vr_settings;
 
 static char asset_dir[512];
 static char state_file[512];
+static char add_entry[512];
 static char remove_entry[512];
 static volatile sig_atomic_t stop_requested;
 
@@ -40,43 +41,57 @@ static void request_stop(int sig)
     stop_requested = 1;
 }
 
-/* App list entry that removes the icon; it exists only while this runs. */
-static void write_remove_entry(void)
+/*
+ * The app list offers one entry at a time: "Remove" while the icon is on
+ * the bar, "Add" after it has been removed.
+ */
+static void init_entry_paths(void)
 {
     const char *data_home = getenv("XDG_DATA_HOME");
     const char *home = getenv("HOME");
-    FILE *f;
+    char dir[480];
 
     if (data_home && *data_home)
-        snprintf(remove_entry, sizeof remove_entry,
-                 "%s/applications/guardian-toggle-remove.desktop", data_home);
+        snprintf(dir, sizeof dir, "%s/applications", data_home);
     else
-        snprintf(remove_entry, sizeof remove_entry,
-                 "%s/.local/share/applications/guardian-toggle-remove.desktop", home ? home : "");
+        snprintf(dir, sizeof dir, "%s/.local/share/applications", home ? home : "");
+    snprintf(add_entry, sizeof add_entry, "%s/guardian-toggle-add.desktop", dir);
+    snprintf(remove_entry, sizeof remove_entry, "%s/guardian-toggle-remove.desktop", dir);
+}
 
-    f = fopen(remove_entry, "w");
-    if (!f) {
-        remove_entry[0] = '\0';
+static void write_entry(const char *path, const char *name, const char *comment,
+                        const char *action)
+{
+    FILE *f = fopen(path, "w");
+
+    if (!f)
         return;
-    }
     fprintf(f,
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Remove Guardian Icon From Bar\n"
-            "Comment=Hide the guardian toggle icon until SteamVR restarts\n"
-            "Exec=systemctl --user stop guardian-toggle.service\n"
+            "Name=%s\n"
+            "Comment=%s\n"
+            "Exec=systemctl --user %s guardian-toggle.service\n"
             "Icon=%s/icon.png\n"
             "Terminal=false\n"
             "Categories=Utility;\n"
             "StartupNotify=false\n",
-            asset_dir);
+            name, comment, action, asset_dir);
     fclose(f);
 }
 
-static void remove_remove_entry(void)
+static void show_remove_entry(void)
 {
-    if (remove_entry[0])
-        unlink(remove_entry);
+    unlink(add_entry);
+    write_entry(remove_entry, "Remove Guardian Icon From Bar",
+                "Remove the guardian walls toggle from the dashboard bar", "stop");
+}
+
+static void show_add_entry(void)
+{
+    unlink(remove_entry);
+    write_entry(add_entry, "Add Guardian Icon To Bar",
+                "Put the guardian walls toggle back on the dashboard bar", "start");
 }
 
 static void *get_interface(const char *version)
@@ -243,22 +258,24 @@ int main(int argc, char **argv)
 
     signal(SIGTERM, request_stop);
     signal(SIGINT, request_stop);
-    write_remove_entry();
+    init_entry_paths();
+    show_remove_entry();
 
     for (;;) {
         if (stop_requested) {
             /* Removed from the bar: don't leave the walls hidden with no icon to restore them. */
             if (walls_hidden())
                 toggle_walls();
-            remove_remove_entry();
+            show_add_entry();
             VR_ShutdownInternal();
             return 0;
         }
 
         while (vr_system->PollNextEvent(&ev, sizeof ev)) {
             if (ev.eventType == EVREventType_VREvent_Quit) {
+                /* The icon returns on its own when SteamVR next starts. */
                 vr_system->AcknowledgeQuit_Exiting();
-                remove_remove_entry();
+                unlink(remove_entry);
                 VR_ShutdownInternal();
                 return 0;
             }

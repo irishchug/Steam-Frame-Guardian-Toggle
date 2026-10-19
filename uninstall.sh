@@ -22,6 +22,6 @@ if [ -x "$vrcmd" ]; then
 fi
 
 rm -rf "$data/guardian-toggle" "$state" "$data/applications/guardian-toggle.desktop" \
-    "$data/applications/guardian-toggle-remove.desktop" \
+    "$data/applications/guardian-toggle-remove.desktop" "$data/applications/guardian-toggle-add.desktop" \
     "$HOME/.local/share/Steam/logs/vrclient_guardian-bar.txt"
 echo "Removed."

@@ -13,10 +13,12 @@ dashboard's bottom bar.
   hides or shows the walls, flashes a short notice, and returns to the Steam window.
 - Walls are always shown again when SteamVR starts, so hiding them only lasts for the
   current session.
-- Adds a **Guardian Walls Toggle** entry to the app list that does the same thing.
-- While the icon is on the bar, the app list also has **Remove Guardian Icon From Bar**.
-  It removes the icon (turning the walls back on if they are hidden) until SteamVR
-  next starts.
+- While the icon is on the bar, the app list has **Remove Guardian Icon From Bar**.
+  It takes the icon off the bar and turns the walls back on if they are hidden.
+- After that, the app list has **Add Guardian Icon To Bar** to put it back. The icon
+  also returns on its own the next time SteamVR starts.
+- Over SSH, `~/.local/share/guardian-toggle/toggle.sh` toggles the walls from the
+  command line.
 - Restores your own wall fade distance when showing the walls (default `0.7`).
 
 The walls are controlled by the `collisionBounds.CollisionBoundsFadeDistance` SteamVR
@@ -56,7 +58,8 @@ While SSH'd into the headset:
 This stops and removes the background service, the bar icon, the app list entries and
 saved state, and turns the walls back on if they are hidden.
 
-To keep it installed but stop the bar icon from coming back each time SteamVR starts:
+To keep it installed but stop the bar icon from coming back each time SteamVR starts
+(**Add Guardian Icon To Bar** still works for the current session):
 
 ```bash
 systemctl --user disable --now guardian-toggle.service
