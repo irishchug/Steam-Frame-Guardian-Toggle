@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Add/Remove Guardian Bar Icon
+Comment=Put the guardian walls toggle on the dashboard bar, or take it off
+Exec=@INSTALL_DIR@/bar-icon.sh
+Icon=@INSTALL_DIR@/icon.png
+Terminal=false
+Categories=Utility;
+StartupNotify=false
