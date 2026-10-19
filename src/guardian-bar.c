@@ -3,6 +3,7 @@
  * Tapping the icon hides or shows the guardian walls, flashes a notice,
  * and returns the dashboard to the Steam window.
  */
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -30,6 +31,53 @@ static struct VR_IVRSettings_FnTable *vr_settings;
 
 static char asset_dir[512];
 static char state_file[512];
+static char remove_entry[512];
+static volatile sig_atomic_t stop_requested;
+
+static void request_stop(int sig)
+{
+    (void)sig;
+    stop_requested = 1;
+}
+
+/* App list entry that removes the icon; it exists only while this runs. */
+static void write_remove_entry(void)
+{
+    const char *data_home = getenv("XDG_DATA_HOME");
+    const char *home = getenv("HOME");
+    FILE *f;
+
+    if (data_home && *data_home)
+        snprintf(remove_entry, sizeof remove_entry,
+                 "%s/applications/guardian-toggle-remove.desktop", data_home);
+    else
+        snprintf(remove_entry, sizeof remove_entry,
+                 "%s/.local/share/applications/guardian-toggle-remove.desktop", home ? home : "");
+
+    f = fopen(remove_entry, "w");
+    if (!f) {
+        remove_entry[0] = '\0';
+        return;
+    }
+    fprintf(f,
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Remove Guardian Icon From Bar\n"
+            "Comment=Hide the guardian toggle icon until SteamVR restarts\n"
+            "Exec=systemctl --user stop guardian-toggle.service\n"
+            "Icon=%s/icon.png\n"
+            "Terminal=false\n"
+            "Categories=Utility;\n"
+            "StartupNotify=false\n",
+            asset_dir);
+    fclose(f);
+}
+
+static void remove_remove_entry(void)
+{
+    if (remove_entry[0])
+        unlink(remove_entry);
+}
 
 static void *get_interface(const char *version)
 {
@@ -177,7 +225,10 @@ int main(int argc, char **argv)
         VR_ShutdownInternal();
         return 1;
     }
-    hidden = walls_hidden();
+    /* Walls always start shown; hiding them lasts one SteamVR session. */
+    if (walls_hidden())
+        toggle_walls();
+    hidden = false;
     set_image(thumb, "icon.png");
     set_image(panel, notice_image(hidden));
     vr_overlay->SetOverlayWidthInMeters(panel, 1.0f);
@@ -190,10 +241,24 @@ int main(int argc, char **argv)
     struct HmdMatrix34_t in_front = { { { 1, 0, 0, 0 }, { 0, 1, 0, -0.1f }, { 0, 0, 1, -1.0f } } };
     vr_overlay->SetOverlayTransformTrackedDeviceRelative(notice, k_unTrackedDeviceIndex_Hmd, &in_front);
 
+    signal(SIGTERM, request_stop);
+    signal(SIGINT, request_stop);
+    write_remove_entry();
+
     for (;;) {
+        if (stop_requested) {
+            /* Removed from the bar: don't leave the walls hidden with no icon to restore them. */
+            if (walls_hidden())
+                toggle_walls();
+            remove_remove_entry();
+            VR_ShutdownInternal();
+            return 0;
+        }
+
         while (vr_system->PollNextEvent(&ev, sizeof ev)) {
             if (ev.eventType == EVREventType_VREvent_Quit) {
                 vr_system->AcknowledgeQuit_Exiting();
+                remove_remove_entry();
                 VR_ShutdownInternal();
                 return 0;
             }
@@ -208,6 +273,9 @@ int main(int argc, char **argv)
             vr_overlay->ShowOverlay(notice);
             notice_until = now() + NOTICE_SECONDS;
             vr_overlay->ShowDashboard(STEAM_DASHBOARD);
+            /* Otherwise reopening the dashboard returns to this panel and toggles again. */
+            EVRSettingsError err = EVRSettingsError_VRSettingsError_None;
+            vr_settings->SetString("dashboard", "lastAccessedExternalOverlayKey", "", &err);
         }
 
         if (notice_until && now() >= notice_until) {

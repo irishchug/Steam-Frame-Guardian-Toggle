@@ -1,45 +1,71 @@
 # Steam Frame Guardian Toggle
 
-Show or hide the guardian (chaperone) walls on a Steam Frame with a single tap.
+Show or hide the guardian (chaperone) walls on a Steam Frame with one tap from the
+dashboard's bottom bar.
 
 > **Warning:** the guardian exists to keep you from walking into things. Hiding
 > the walls removes that warning. Only use this in a space you know is clear.
 > The floor outline stays visible while the walls are hidden.
 
-## How it works
+## What it does
 
-The walls fade in based on the `collisionBounds.CollisionBoundsFadeDistance`
-SteamVR setting. The toggle sets it to `0` (walls never appear) and restores
-your previous value (default `0.7`) when toggled back. It uses the `vrcmd`
-tool that ships with SteamVR, so nothing in `/opt/steamvr` is modified.
+- Adds a **Guardian Walls** icon to the bottom bar of the SteamVR dashboard. Tapping it
+  hides or shows the walls, flashes a short notice, and returns to the Steam window.
+- Walls are always shown again when SteamVR starts, so hiding them only lasts for the
+  current session.
+- Adds a **Guardian Walls Toggle** entry to the app list that does the same thing.
+- While the icon is on the bar, the app list also has **Remove Guardian Icon From Bar**.
+  It removes the icon (turning the walls back on if they are hidden) until SteamVR
+  next starts.
+- Restores your own wall fade distance when showing the walls (default `0.7`).
 
-Tested on a Steam Frame running SteamOS (Linux 6.18). SteamVR updates may change
-behavior.
+The walls are controlled by the `collisionBounds.CollisionBoundsFadeDistance` SteamVR
+setting: `0` hides them. Nothing under `/opt/steamvr` is modified.
+
+The bar icon is served by a small background program that starts and stops with
+SteamVR. It sleeps between checks and uses about 0.2% CPU and 15 MB of memory.
+
+Tested on a Steam Frame running SteamOS. SteamVR updates may change behavior.
 
 ## Install
 
-Enable SSH on the headset, then from a PC:
+1. Enable Developer Mode and set a password on the headset by following Valve's
+   [Steam Frame setup guide](https://partner.steamgames.com/doc/steamframe/setup#Developer_Mode).
+2. SSH into the headset (`ssh steamos@<headset-name>`) and run:
 
-```bash
-./install.sh <ssh-host>
-```
+   ```bash
+   git clone https://github.com/irishchug/Steam-Frame-Guardian-Toggle.git
+   cd Steam-Frame-Guardian-Toggle
+   ./install.sh
+   ```
 
-Or, with this folder on the headset:
+   The installer builds the bar program on the headset, so it needs a C compiler
+   (`cc`). Re-run it the same way to update.
 
-```bash
-./install.sh
-```
-
-This adds a **Guardian Walls Toggle** entry to the headset's app list.
+You can also install from a PC with this repository checked out:
+`./install.sh steamos@<headset-name>`.
 
 ## Uninstall
 
+While SSH'd into the headset:
+
 ```bash
-./uninstall.sh
+~/.local/share/guardian-toggle/uninstall.sh
 ```
 
-Run it on the headset. If the walls are currently hidden, they are restored first.
+This stops and removes the background service, the bar icon, the app list entries and
+saved state, and turns the walls back on if they are hidden.
+
+To keep it installed but stop the bar icon from coming back each time SteamVR starts:
+
+```bash
+systemctl --user disable --now guardian-toggle.service
+```
+
+Turn it back on with `systemctl --user enable --now guardian-toggle.service`.
 
 ## License
 
-MIT
+MIT. `third_party/openvr/openvr_capi.h` is from Valve's
+[OpenVR SDK](https://github.com/ValveSoftware/openvr) and is covered by its own
+BSD-3-Clause license in `third_party/openvr/LICENSE`.

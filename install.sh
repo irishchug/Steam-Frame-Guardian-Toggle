@@ -26,8 +26,9 @@ fi
 
 mkdir -p "$install_dir" "$apps_dir" "$unit_dir"
 
-# Menu entry.
+# Menu entry, plus a copy of the uninstaller so removal needs no checkout.
 install -m 755 "$src/src/toggle.sh" "$install_dir/toggle.sh"
+install -m 755 "$src/uninstall.sh" "$install_dir/uninstall.sh"
 sed "s|@INSTALL_DIR@|$install_dir|" "$src/src/guardian-toggle.desktop" > "$apps_dir/guardian-toggle.desktop"
 
 # Dashboard bar service, linked against the headset's own OpenVR library.
